@@ -17,6 +17,7 @@ def get_bug_stats_for_milestone(milestone):
     encoded_args = urllib.urlencode(query_args)
 
     url = 'https://api-dev.bugzilla.mozilla.org/latest/bug/?' + encoded_args
+    print url
     result_json = urllib2.urlopen(url).read()
     result = json.loads(result_json)
     bugs = result['bugs']
@@ -37,7 +38,7 @@ def get_bug_stats_for_milestone(milestone):
     return reporters, assignees
 
 if __name__ == "__main__":
-    reporters, assignees = get_bug_stats_for_milestone("mozilla17")
+    reporters, assignees = get_bug_stats_for_milestone("firefox20")
     max_num_reports = 0
     reporter = None
     for k, v in reporters.iteritems():
