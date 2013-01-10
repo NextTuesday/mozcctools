@@ -6,7 +6,7 @@ import sqlite3
 import sys
 import time
 
-QUERY = """SELECT actor_uri, subj_uri FROM event_view WHERE id IN (SELECT id FROM event_view
+QUERY = """SELECT actor_uri, subj_uri, id FROM event_view WHERE id IN (SELECT id FROM event_view
 WHERE subj_text_id IN (SELECT id FROM text where VALUE = "%s")
 AND subj_interpretation IN (SELECT id FROM interpretation WHERE value = "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Document"))
 ORDER BY timestamp DESC LIMIT 1000"""
@@ -31,17 +31,18 @@ def search(query):
         actor_hash = {}
         uri_hash = {}
         for d in data:
+            i = d[2]
             u = str(d[1])
             d = d[0]
             if d not in actor_hash:
-                actor_hash[d] = 0
-            actor_hash[d] += 1
+                actor_hash[d] = set()
+            actor_hash[d].add(i)
             if u.startswith("file://"):
                 u = u.replace("file://", "")
                 if u not in uri_hash:
                     uri_hash[u] = 0
                 uri_hash[u] += 1
-        x = [(k, v) for v, k in actor_hash.iteritems()]
+        x = [(len(k), v) for v, k in actor_hash.iteritems()]
         x.sort(reverse=True)
         results = []
         for s in x[:10]:
@@ -85,7 +86,7 @@ def search(query):
     return results, results2, qtype
 
 if __name__=="__main__":
-    contacts, files, t = search('nsXPConnect.cpp')
+    contacts, files, t = search('browser.xul')
     print "---"
     for c in contacts:
         print c
