@@ -52,7 +52,7 @@ def search(query):
         results2 = []
         for s in y[:10]:
             results2.append(s[1])
-        return results, results2, "Files"
+        return results, results2, "File"
 
     results, results2, qtype = query_file(query)
     con.close() 
