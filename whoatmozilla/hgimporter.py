@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 from zeitgeist.client import ZeitgeistClient
 from zeitgeist.datamodel import Event, Subject, Interpretation, Manifestation
 
-ZG = ZeitgeistClient()
+ZG = None
 
 def format_log_entry(log):
     log = log.split("||")
@@ -61,6 +61,7 @@ def format_events(commits):
     return events
 
 def push_to_zeitgeist(commits):
+    ZG = ZeitgeistClient()
     commits = commits
     def error_handler(error):
         print "===> ERROR:", error
