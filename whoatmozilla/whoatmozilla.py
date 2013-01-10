@@ -6,9 +6,11 @@ import sqlite3
 import sys
 import time
 
-QUERY = """SELECT actor_uri FROM event_view 
+QUERY = """SELECT actor_uri, subj_uri FROM event_view WHERE id IN (SELECT id FROM event_view
 WHERE subj_text_id IN (SELECT id FROM text where VALUE = "%s")
-ORDER BY timestamp  DESC LIMIT 200"""
+AND subj_interpretation IN (SELECT id FROM interpretation WHERE value = "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#Document"))
+ORDER BY timestamp DESC LIMIT 1000"""
+
 
 bus = dbus.SessionBus()
 obj = bus.get_object('org.gnome.zeitgeist.SimpleIndexer',
@@ -27,17 +29,31 @@ def search(query):
         cur.execute(QUERY % query)
         data = cur.fetchall()
         actor_hash = {}
+        uri_hash = {}
         for d in data:
+            u = str(d[1])
             d = d[0]
             if d not in actor_hash:
                 actor_hash[d] = 0
             actor_hash[d] += 1
-            x = [(k, v) for v, k in actor_hash.iteritems()]
-            x.sort(reverse=True)
-            results = (s[1] for s in x[:10])
-        return results
+            if u.startswith("file://"):
+                u = u.replace("file://", "")
+                if u not in uri_hash:
+                    uri_hash[u] = 0
+                uri_hash[u] += 1
+        x = [(k, v) for v, k in actor_hash.iteritems()]
+        x.sort(reverse=True)
+        results = []
+        for s in x[:10]:
+            results.append(s[1])
+        y = [(k, v) for v, k in uri_hash.iteritems()]
+        y.sort(reverse=True)
+        results2 = []
+        for s in y[:10]:
+            results2.append(s[1])
+        return results, results2, "Files"
 
-    results = query_file(query)
+    results, results2, qtype = query_file(query)
     con.close() 
     if not results:
         print "==> Looking for Keyword"
@@ -45,19 +61,34 @@ def search(query):
         events = map(Event, events)
         id_hash = {}
         actor_hash = {}
+        uri_hash = {}
         if len(events) > 0:
             for event in events:
                 id_hash[event.id] = event
                 if event.actor not in actor_hash:
                     actor_hash[event.actor] = 0
                 actor_hash[event.actor] += 1
+                for subject in event.subjects:
+                    if subject.uri.startswith("file://"):
+                        u = subject.uri.replace("file://", "")
+                        if u not in uri_hash:
+                            uri_hash[u] = 0
+                        uri_hash[u] += 1
             x = [(k, v) for v, k in actor_hash.iteritems()]
             x.sort(reverse=True)
             results = (s[1] for s in x[:10])
+            y = [(k, v) for v, k in uri_hash.iteritems()]
+            y.sort(reverse=True)
+            results2 = (s[1] for s in y[:10])
+            qtype = "Keyword"
     print time.time() - t
-    return results
+    return results, results2, qtype
 
 if __name__=="__main__":
-    contacts = search('IPC')
+    contacts, files, t = search('nsXPConnect.cpp')
+    print "---"
     for c in contacts:
-        print "-", c
+        print c
+    print "---"
+    for f in files:
+        print f
