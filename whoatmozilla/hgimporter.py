@@ -36,27 +36,28 @@ def get_commits():
 def format_events(commits):
     events = []
     for commit in commits:
-        event = Event()
-        event.timestamp = commit["timestamp"] * 1000
-        event.actor = commit["actor"]
-        event.interpretation = Interpretation.MODIFY_EVENT
-        event.manifestation = Manifestation.USER_ACTIVITY
-        subj = Subject()
-        subj.uri = "dav://%s" % commit["uri"]
-        subj.origin = "dav:// " + event.actor
-        subj.interpretation = Interpretation.MESSAGE
-        subj.manifestation = Manifestation.FILE_DATA_OBJECT.REMOTE_DATA_OBJECT
-        subj.text = commit["desc"]
-        event.subjects = [subj]
-        for f in commit["files"]:
-            if f.strip() != "":
-                subj = Subject()
-                subj.uri = "file://" + f
-                subj.interpretation = Interpretation.DOCUMENT
-                subj.manifestation = Manifestation.FILE_DATA_OBJECT.REMOTE_DATA_OBJECT
-                subj.text = f.split("/")[-1]
-                event.subjects.append(subj)
-        events.append(event)
+        if not commit["desc"].lower().startswith("merge"):
+            event = Event()
+            event.timestamp = commit["timestamp"] * 1000
+            event.actor = commit["actor"]
+            event.interpretation = Interpretation.MODIFY_EVENT
+            event.manifestation = Manifestation.USER_ACTIVITY
+            subj = Subject()
+            subj.uri = "dav://%s" % commit["uri"]
+            subj.origin = "dav:// " + event.actor
+            subj.interpretation = Interpretation.MESSAGE
+            subj.manifestation = Manifestation.FILE_DATA_OBJECT.REMOTE_DATA_OBJECT
+            subj.text = commit["desc"]
+            event.subjects = [subj]
+            for f in commit["files"]:
+                if f.strip() != "":
+                    subj = Subject()
+                    subj.uri = "file://" + f
+                    subj.interpretation = Interpretation.DOCUMENT
+                    subj.manifestation = Manifestation.FILE_DATA_OBJECT.REMOTE_DATA_OBJECT
+                    subj.text = f.split("/")[-1]
+                    event.subjects.append(subj)
+            events.append(event)
     return events
 
 def push_to_zeitgeist(commits):
@@ -69,7 +70,7 @@ def push_to_zeitgeist(commits):
         if len(commits) > 0:
             events = format_events(commits[0:100])
             commits = commits[100:]
-            time.sleep(1)
+            time.sleep(0.5)
             ZG.insert_events(events, ids_reply_handler, error_handler)
     events = format_events(commits[0:100])
     commits = commits[100:]
