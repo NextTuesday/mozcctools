@@ -1,0 +1,15 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <form action="" method="POST">
+            <span>Query:</span>
+            <input name="query" type="text" value="{{ query }}" autofocus="autofocus"/>
+        </form>
+        <div class="results">
+            {% for result in results %}
+                {{ result }}</br>
+            {% endfor %}
+        </div>
+    </body>
+</html>
