@@ -61,7 +61,3 @@ if __name__=="__main__":
     contacts = search('IPC')
     for c in contacts:
         print "-", c
-
-# Start a mainloop
-from gi.repository import GLib
-GLib.MainLoop().run()
