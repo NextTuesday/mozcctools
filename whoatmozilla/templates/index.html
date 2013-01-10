@@ -6,8 +6,16 @@
             <span>Query:</span>
             <input name="query" type="text" value="{{ query }}" autofocus="autofocus"/>
         </form>
+        <h1>Found {{qtype}}</h1>
+        <h1>People related to {{qtype}} {{query}}</h1>
         <div class="results">
             {% for result in results %}
+                {{ result }}</br>
+            {% endfor %}
+        </div>
+        <h1>Files related to {{query}}</h1>
+        <div class="results">
+            {% for result in files %}
                 {{ result }}</br>
             {% endfor %}
         </div>

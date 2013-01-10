@@ -7,7 +7,7 @@ app = Flask(__name__)
 def http_search():
     if request.method == 'POST':
         query = request.form['query']
-        results = search(query)
+        results, files, qtype = search(query)
     else:
         results = []
 
