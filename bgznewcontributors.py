@@ -35,7 +35,10 @@ def get_new_assignees(milestone):
 
     for bug in bugs:
         assignee = bug['assigned_to']
-        assignee = assignee['real_name'] if 'real_name' in assignee else assignee['name']
+        if 'real_name' in assignee:
+            assignee = assignee['real_name'] + "   <" + assignee['name'] + ">"
+        else:
+            assignee = assignee['name']
         if not assignee == "nobody@mozilla.org":
             if not assignee in assignees:
                 assignees[assignee] = []
@@ -49,6 +52,7 @@ if __name__ == "__main__":
     start = int(args[0])
     release = {}
     missing = {}
+    missing_p = {}
     new = {}
     num_bugs = {}
     comebacks = {}
@@ -69,6 +73,7 @@ if __name__ == "__main__":
                     new[i][p] = [LINK % (bug["id"], bug["id"]) for bug in release[i][p]]
                 else:
                     comebacks[i].add(p)
+            missing_p[p] = (i, release[i][p])
         all_hackers = all_hackers.union(set(release[i].keys()))
 
     f = open("new.txt", "w")
@@ -83,4 +88,22 @@ if __name__ == "__main__":
     for i in xrange(start + 1, release_nr + 1):
         stats += "%i;%i;%i;%i;%i;%i;%i\n" % (i, len(release[i]), len(missing[i]), len(new[i]), len(comebacks[i]), len(release[i]) - (len(new[i]) + len(comebacks[i])), len(bugs[i]))
     f.write(stats)
+    f.close()
+
+    missing_list = {}
+    for p, r in missing_p.iteritems():
+        if release_nr - r[0] >= 3:
+            line = p + ": " + " Last assigned bug at mozilla release " + str(r[0]) + ". Bugs: " + ", ".join(["#" + str(b["id"]) for b in r[1]]) + "\n"
+            if r[0] not in missing_list:
+                missing_list[r[0]] = []
+            missing_list[r[0]].append(line)
+ 
+    f = open("missing.csv", "w")
+    for r, lines in missing_list.iteritems():
+        f.write("====================\n" + str(r) + "\n")
+        for line in lines:
+            try:
+                f.write(line)
+            except:
+                print line
     f.close()
